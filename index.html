@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Realtime chat App</title>
+
+    <style>
+            body {font-family: Arial, Helvetica, sans-serif;}
+            * {box-sizing: border-box;}
+            
+            /* Button used to open the chat form - fixed at the bottom of the page */
+            .open-button {
+              background-color: #555;
+              color: white;
+              padding: 16px 20px;
+              border: none;
+              cursor: pointer;
+              opacity: 0.8;
+              position: fixed;
+              bottom: 23px;
+              right: 28px;
+              width: 280px;
+            }
+            
+            /* The popup chat - hidden by default */
+            .chat-popup {
+              display: none;
+              position: fixed;
+              bottom: 0;
+              right: 15px;
+              border: 3px solid #f1f1f1;
+              z-index: 9;
+            }
+            
+            /* Add styles to the form container */
+            .div-container {
+              max-width: 300px;
+              padding: 10px;
+              background-color: white;
+            }
+            
+            /* Full-width textarea */
+            .div-container input {
+              width: 100%;
+              padding: 15px;
+              margin: 5px 0 22px 0;
+              border: none;
+              background: #f1f1f1;
+              resize: none;
+              min-height: 40px;
+            }
+            
+            /* When the textarea gets focus, do something */
+            .div-container textarea:focus {
+              background-color: #ddd;
+              outline: none;
+            }
+            
+            /* Set a style for the submit/send button */
+            .div-container .btn {
+              background-color: #4CAF50;
+              color: white;
+              padding: 16px 20px;
+              border: none;
+              cursor: pointer;
+              width: 100%;
+              margin-bottom:10px;
+              opacity: 0.8;
+            }
+            
+            /* Add a red background color to the cancel button */
+            .div-container .cancel {
+              background-color: red;
+            }
+            
+            /* Add some hover effects to buttons */
+            .div-container .btn:hover, .open-button:hover {
+              opacity: 1;
+            }
+            </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js" charset="utf-8"></script>
+    <script type="text/javascript">
+        var socket = io()
+        function setUsername(){
+            socket.emit('setUsername', document.getElementById('name').value);
+        }
+        var user;
+        socket.on('userExists', (data) => {
+            document.getElementById('error-control').innerHTML = data
+        })
+
+        socket.on('userSet', (data) => {
+            user = data.username
+            document.body.innerHTML = '<button class="open-button" onclick="openForm()">Chat</button>\
+            <div class="chat-popup" id="myForm">\
+            <div class="div-container">\
+                <h1>Chat</h1>\
+                <div id= "message-container"></div>\
+                <input type="text" id= "message">\
+                <button type="button" class="btn" onclick="sendMessage()" >Send</button>\
+                <button type="button" class="btn cancel" onclick="closeForm()">Close</button>\
+            </div></div>'
+        })
+
+        function sendMessage(){
+            var msg = document.getElementById('message').value;
+            document.getElementById('message').value = ''
+            if(msg){
+                socket.emit('msg', {message: msg, user: user});
+            }
+        }
+
+        socket.on('newMessage', (data) => {
+            if(user){
+                document.getElementById('message-container').innerHTML +=
+                '<div><b>' + data.user + '</b>: ' + data.message + '</div>'
+            }
+        })
+
+        function openForm() {
+            document.getElementById("myForm").style.display = "block";
+        }
+
+        function closeForm() {
+            document.getElementById("myForm").style.display = "none";
+        }
+
+    </script>
+    <div id = "error-control"></div>
+    <input id="name" type="text" name="name" autocomplete="off" placeholder="Pleas input your name"/>
+    <button type="button" onclick="setUsername()">Join </button>
+    
+    
+</body>
+</html>
